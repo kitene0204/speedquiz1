@@ -50,25 +50,32 @@ export function saveSupabaseConfig(url: string, anonKey: string) {
   return getSupabase();
 }
 
-export async function testSupabaseConnection(url: string, anonKey: string): Promise<{ success: boolean; message: string }> {
+export async function testSupabaseConnection(url: string, anonKey: string): Promise<{ success: boolean; needsTables?: boolean; message: string }> {
   try {
     if (!url || !anonKey) {
       return { success: false, message: 'URL과 Anon Key를 모두 입력해주세요.' };
     }
     const client = createClient(url.trim(), anonKey.trim());
-    // Attempt to query rooms table or ping
+    // Attempt to query rooms table
     const { error } = await client.from('rooms').select('id').limit(1);
     if (error) {
-      if (error.code === '42P01') {
-        // Table does not exist yet, but authentication succeeded!
+      // PGRST205: Could not find the table in the schema cache
+      // 42P01: undefined table
+      if (
+        error.code === 'PGRST205' ||
+        error.code === '42P01' ||
+        error.message?.includes('schema cache') ||
+        error.message?.includes('Could not find the table')
+      ) {
         return {
           success: true,
-          message: '슈파베이스 인증 성공! (아래 SQL 탭에서 테이블 생성 스크립트를 실행해주세요)',
+          needsTables: true,
+          message: '슈파베이스 API 인증 성공! 🔑 다만 아직 테이블이 없습니다. 아래 [테이블 SQL 생성하기] 버튼을 눌러 스크립트를 실행해주세요!',
         };
       }
       return { success: false, message: `연결 오류: ${error.message} (${error.code || ''})` };
     }
-    return { success: true, message: '슈파베이스 데이터베이스 및 Realtime 정상 연결 완료! 🟢' };
+    return { success: true, needsTables: false, message: '슈파베이스 데이터베이스 및 Realtime 정상 연결 완료! 🟢' };
   } catch (err: any) {
     return { success: false, message: `연결 실패: ${err?.message || '네트워크 오류'}` };
   }
