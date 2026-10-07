@@ -1,0 +1,6 @@
+{
+  "name": "스피드 키워드 경험 맞추기 (Who Am I? Speed Quiz)",
+  "description": "3~6개의 키워드로 특별한 경험을 공유하고 실시간으로 누구인지 맞추는 실시간 학급 스피드 퀴즈 웹앱",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
